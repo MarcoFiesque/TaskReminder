@@ -1,0 +1,48 @@
+﻿@page "/"
+@using TaskReminder.Shared
+@inject HttpClient Http
+
+@todos
+@if (todos == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Titre</th>
+                <th>Description</th>
+                <th>Status</th>
+                <th>Editer</th>
+                <th>Supprimer</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var todo in todos)
+            {
+                <tr>
+                    <td>@todo.Id</td>
+                    <td>@todo.Title</td>
+                    <td>@todo.Description</td>
+                    <td>@todo.IsDone</td>
+                    <td><button class="btn btn-warning">Edit</button></td>
+                    <td><button class="btn btn-danger">Del</button></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private TodoItem[] todos;
+
+    protected override async Task OnInitializedAsync()
+    {
+        todos = await Http.GetFromJsonAsync<TodoItem[]>("https://localhost:5001/api");
+        Console.WriteLine(todos);
+    }
+
+}
