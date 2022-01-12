@@ -25,6 +25,15 @@ namespace TaskReminder.Server
             services.AddControllersWithViews();
             services.AddRazorPages();
             services.AddScoped<TodoService>();
+            services.AddCors(opt =>
+            {
+                opt.AddDefaultPolicy(builder =>
+                {
+                    builder.AllowAnyOrigin()
+                        .AllowAnyHeader()
+                        .AllowAnyMethod();
+                });
+            });
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -40,6 +49,7 @@ namespace TaskReminder.Server
 
                 app.UseHsts();
             }
+            app.UseCors();
 
             app.UseHttpsRedirection();
             app.UseBlazorFrameworkFiles();

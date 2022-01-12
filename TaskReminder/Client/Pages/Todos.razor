@@ -2,47 +2,102 @@
 @using TaskReminder.Shared
 @inject HttpClient Http
 
-@todos
-@if (todos == null)
-{
-    <p><em>Loading...</em></p>
-}
-else
-{
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Id</th>
-                <th>Titre</th>
-                <th>Description</th>
-                <th>Status</th>
-                <th>Editer</th>
-                <th>Supprimer</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var todo in todos)
-            {
-                <tr>
-                    <td>@todo.Id</td>
-                    <td>@todo.Title</td>
-                    <td>@todo.Description</td>
-                    <td>@todo.IsDone</td>
-                    <td><button class="btn btn-warning">Edit</button></td>
-                    <td><button class="btn btn-danger">Del</button></td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
+<div class="row">
+    <div class="col-lg-6">
+        <br />
+        <h3>Créer tâche</h3>
+        <input type="text" class="form-control mb-3" @bind-value="newTodo.Title" placeholder="Entrez votre nom" />
+        <input type="text" class="form-control mb-3" @bind-value="newTodo.Description" placeholder="Description de la tâche" />
+        <label for="isDone">Marquer la tâche comme étant terminée</label>
+        <input type="checkbox" class="form-checkbox mb-3" @bind="newTodo.IsDone" />
+        <button class="btn btn-primary btn-block" @onclick="SubmitTodo">Valider</button>
+    </div>
+    <div class="col-lg-6">
 
+        @if (todos == null)
+        {
+
+            <div class="h-100 w-100 d-flex "><em class="mx-auto my-auto">Waiting for data...</em></div>
+        }
+        else
+        {
+            <br />
+            <table class="table table-responsive mt-4">
+                <thead>
+                    <tr>
+                        <th>Id</th>
+                        <th>Titre</th>
+                        <th>Description</th>
+                        <th>Status</th>
+                        <th>Editer</th>
+                        <th>Supprimer</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var todo in todos)
+                    {
+                        <tr>
+                            <td>@todo.Id</td>
+                            <td>@todo.Title</td>
+                            <td>@todo.Description</td>
+                            <td>@(!todo.IsDone ? "En cours ⚙️" : "Terminée ✅")</td>
+                            <td><button class="btn btn-warning" @onclick="@(()=>GetTodo(todo.Id))">Modifier</button></td>
+                            <td><button class="btn btn-danger" @onclick="@(()=>DeleteTodo(@todo.Id))">Supprimer</button></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
 @code {
+
     private TodoItem[] todos;
+    private bool edit = false;
+    private TodoItem newTodo = new TodoItem();
+
+    private async Task GetTodo(string id)
+    {
+        newTodo = await Http.GetFromJsonAsync<TodoItem>("api/" + id);
+        edit = true;
+
+    }
+
+    private async Task SubmitTodo()
+    {
+        if (edit == false)
+        {
+            if(newTodo.Title != null)
+            {
+                await Http.PostAsJsonAsync<TodoItem>("api", newTodo);
+                await OnInitializedAsync();
+            }
+                newTodo = new TodoItem();
+        }
+        else
+        {
+            await Http.PutAsJsonAsync<TodoItem>("api/" + newTodo.Id, newTodo);
+            edit = false;
+            newTodo = new TodoItem();
+            await OnInitializedAsync();
+        }
+
+    }
+
+    private async Task DeleteTodo(string id)
+    {
+        @*TodoItem todo = await Http.GetFromJsonAsync<TodoItem>("api/"+id);
+        if (!await JSRuntime.InvokeAsync<bool>("confirm", $"Voulez vous vraiment supprimer cette tâche ? '{todo.Title}'?"))
+            return*@
+        await Http.DeleteAsync("api/" + id);
+        await OnInitializedAsync();
+    }
 
     protected override async Task OnInitializedAsync()
     {
-        todos = await Http.GetFromJsonAsync<TodoItem[]>("https://localhost:5001/api");
-        Console.WriteLine(todos);
+
+
+        todos = await Http.GetFromJsonAsync<TodoItem[]>("api/");
     }
 
 }
