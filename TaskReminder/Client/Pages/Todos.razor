@@ -25,9 +25,7 @@
             <table class="table table-responsive mt-4">
                 <thead>
                     <tr>
-                        <th>Id</th>
                         <th>Titre</th>
-                        <th>Description</th>
                         <th>Status</th>
                         <th>Editer</th>
                         <th>Supprimer</th>
@@ -37,9 +35,12 @@
                     @foreach (var todo in todos)
                     {
                         <tr>
-                            <td>@todo.Id</td>
-                            <td>@todo.Title</td>
-                            <td>@todo.Description</td>
+                            <td>
+                                <NavLink class="nav-link" href='@($"todo/{todo.Id}")'>
+                                    @todo.Title
+                                </NavLink>    
+
+                            </td>
                             <td>@(!todo.IsDone ? "En cours ⚙️" : "Terminée ✅")</td>
                             <td><button class="btn btn-warning" @onclick="@(()=>GetTodo(todo.Id))">Modifier</button></td>
                             <td><button class="btn btn-danger" @onclick="@(()=>DeleteTodo(@todo.Id))">Supprimer</button></td>
@@ -86,9 +87,6 @@
 
     private async Task DeleteTodo(string id)
     {
-        @*TodoItem todo = await Http.GetFromJsonAsync<TodoItem>("api/"+id);
-        if (!await JSRuntime.InvokeAsync<bool>("confirm", $"Voulez vous vraiment supprimer cette tâche ? '{todo.Title}'?"))
-            return*@
         await Http.DeleteAsync("api/" + id);
         await OnInitializedAsync();
     }

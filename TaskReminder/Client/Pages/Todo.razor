@@ -1,0 +1,83 @@
+﻿@page "/Todo/{TodoId}"
+@using TaskReminder.Shared
+@inject HttpClient Http
+
+<div class="d-flex flex-column">
+
+    <h1>@todo.Title</h1>
+    <div>@todo.Description</div>
+    <div>@(todo.IsDone ? "Tâche terminée" : "Tâche en cours")</div>
+    <div>
+        Status de la tâche :
+        @if (todo.IsDone)
+        {
+            <span class="badge text-white bg-danger p-2">Faite</span>
+        }
+        else
+        {
+            <span class="badge text-white bg-success p-2">En cours</span>
+        }
+    </div>
+    <NavLink class="btn btn-danger mt-3 w-100" href="/">
+        <i class="fas fa-arrow-left"></i>
+        <i class="fa-solid fa-arrow-left"></i>
+        Retour à la liste des tâches
+    </NavLink>
+
+</div>
+@code {
+
+    [Parameter]
+    public string todoId { get; set; }
+
+    @*private TodoItem[] todos;*@
+private bool edit = false;
+private TodoItem todo = new TodoItem();
+
+private async Task GetTodo(string id)
+{
+    todo = await Http.GetFromJsonAsync<TodoItem>("api/" + id);
+
+    edit = true;
+
+}
+
+protected override void OnParametersSet()
+{
+    base.OnParametersSet();
+}
+
+private async Task SubmitTodo()
+{
+    if (edit == false)
+    {
+        if(todo.Title != null)
+        {
+            await Http.PostAsJsonAsync<TodoItem>("api", todo);
+            await OnInitializedAsync();
+        }
+        todo = new TodoItem();
+    }
+    else
+    {
+        await Http.PutAsJsonAsync<TodoItem>("api/" + todo.Id, todo);
+        edit = false;
+        todo = new TodoItem();
+        await OnInitializedAsync();
+    }
+
+}
+
+private async Task DeleteTodo(string id)
+{
+    await Http.DeleteAsync("api/" + id);
+    await OnInitializedAsync();
+}
+
+protected override async Task OnInitializedAsync()
+{
+
+    await GetTodo(todoId);
+}
+
+}
